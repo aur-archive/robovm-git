@@ -1,0 +1,44 @@
+#Maintainer: PedroHLC
+
+pkgname=robovm-git
+provides=('robovm')
+conflicts=('robovm')
+_releasever=0.0.12-SNAPSHOT
+pkgver=1033
+pkgrel=1
+pkgdesc="RoboVM compiler translates Java bytecode into native ARM or x86 code."
+arch=('i686' 'x86_64')
+url="http://www.robovm.org/"
+license=('GPL')
+makedepends=('cmake' 'git' 'gcc' 'maven')
+depends=('java-environment' 'gcc-libs')
+[[ "$CARCH" == "x86_64" ]] && depends=('java-environment' 'gcc-multilib')
+source=("robovm::git+git://github.com/robovm/robovm.git"
+	'http://download.robovm.org/icudt48l.dat')
+md5sums=('SKIP' '265c65f1fe38c48bb7eef695522441e8')
+
+build()
+{
+	cd "${srcdir}/robovm"
+	./vm/build.sh --build=release
+	mvn install || return 1
+}
+
+package()
+{
+	mkdir -p \
+		"${pkgdir}/usr/lib/" \
+		"${pkgdir}/usr/share/icu"
+	cp -r "${srcdir}/robovm/bin" "${pkgdir}/usr/"
+	cp -r "${srcdir}/robovm/vm/binaries" "${pkgdir}/usr/lib/vm"
+	install -m 644 "${srcdir}/icudt48l.dat" "${pkgdir}/usr/share/icu/"
+	install -m 755 "${srcdir}/robovm/cacerts/full/target/robovm-cacerts-full-${_releasever}.jar" "${pkgdir}/usr/lib/robovm-cacerts-full.jar"
+	install -m 755 "${srcdir}/robovm/cocoatouch/target/robovm-cocoatouch-${_releasever}.jar" "${pkgdir}/usr/lib/robovm-cocoatouch.jar"
+	install -m 755 "${srcdir}/robovm/cocoatouch/target/robovm-cocoatouch-${_releasever}-sources.jar" "${pkgdir}/usr/lib/robovm-cocoatouch-sources.jar"
+	install -m 755 "${srcdir}/robovm/compiler/target/robovm-compiler-${_releasever}-nodep.jar" "${pkgdir}/usr/lib/robovm-compiler.jar"
+	install -m 755 "${srcdir}/robovm/objc/target/robovm-objc-${_releasever}.jar" "${pkgdir}/usr/lib/robovm-objc.jar"
+	install -m 755 "${srcdir}/robovm/objc/target/robovm-objc-${_releasever}-sources.jar" "${pkgdir}/usr/lib/robovm-objc-sources.jar"
+	install -m 755 "${srcdir}/robovm/rt/target/robovm-rt-${_releasever}.jar" "${pkgdir}/usr/lib/robovm-rt.jar"
+	install -m 755 "${srcdir}/robovm/rt/target/robovm-rt-${_releasever}-sources.jar" "${pkgdir}/usr/lib/robovm-rt-sources.jar"
+	#TODO: Add 'LICENSES' in "${pkgdir}/usr/share/licenses/robovm"
+}
